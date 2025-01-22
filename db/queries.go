@@ -250,6 +250,20 @@ func (m *DBManager) CompanyExists(symbol string) (bool, error) {
 	return exists, err
 }
 
+func (m *DBManager) IsEarningDateToday(symbol string) (bool, error) {
+	query := "SELECT COUNT(*) FROM company WHERE symbol = ? AND next_earning_report = CURDATE()"
+	var count int
+	err := m.DB.QueryRow(query, symbol).Scan(&count)
+	if err != nil {
+		logmanager.Errorf("Error checking company exists: %v", err)
+		return false, err
+	}
+	if count > 0 {
+		return true, nil
+	} 
+	return false, nil
+}
+
 func (m *DBManager) InsertCompany(report models.Company) error {
 	query := fmt.Sprintf(`
 		INSERT INTO company (
