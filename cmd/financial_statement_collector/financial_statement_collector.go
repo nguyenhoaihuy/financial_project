@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 	"financial_project/api"
 	"financial_project/config"
 	"financial_project/db"
@@ -33,33 +34,45 @@ func run() int {
 	// symbols := []string{"AAPL", "MSFT", "GOOGL", "META", "AMZN", "NFLX", "TSLA", "NVDA", "INTC", "AMD", "KO","PEP", "MCD", "SBUX", "NKE", "LULU", "GPS", "TGT", "WMT", "COST"}
 	symbols := cfg.SYMBOLS
 	for _, symbol := range symbols {
-
-		for _, function := range functions {
-			data, err := api.FetchAPIData(function, symbol, cfg.APIKey)
-			if err != nil {
-				logmanager.Errorf("Error fetching data for %s: %v", function, err)
-				return 1
+		earningDateToday, err := dbManager.IsEarningDateToday(symbol)
+		if err != nil {
+			logmanager.Errorf("Error checking earning date: %v", err)
+			return 1
+		}
+		if earningDateToday {
+			today := time.Now()
+			formattedDate := today.Format("2006-01-02")
+			// Print today's date
+			logmanager.Infof("%s earning report today: %s", symbol, formattedDate)
+			for _, function := range functions {
+				data, err := api.FetchAPIData(function, symbol, cfg.APIKey)
+				if err != nil {
+					logmanager.Errorf("Error fetching data for %s: %v", function, err)
+					return 1
+				}
+				switch function {
+				case "INCOME_STATEMENT":
+					if err := services.ProcessIncomeStatement(data, dbManager); err != nil {
+						logmanager.Errorf("Error processing income statement: %v", err)
+						return 1
+					}
+				case "BALANCE_SHEET":
+					// Call ProcessBalanceSheet
+					if err := services.ProcessBalanceSheet(data, dbManager); err != nil {
+						logmanager.Errorf("Error processing balance sheet: %v", err)
+						return 1
+					}
+				case "CASH_FLOW":
+					// Call ProcessCashFlow
+					if err := services.ProcessCashFlow(data, dbManager); err != nil {
+						logmanager.Errorf("Error processing cash flow statement: %v", err)
+						return 1
+					}
+				}
+				
 			}
-			switch function {
-			case "INCOME_STATEMENT":
-				if err := services.ProcessIncomeStatement(data, dbManager); err != nil {
-					logmanager.Errorf("Error processing income statement: %v", err)
-					return 1
-				}
-			case "BALANCE_SHEET":
-				// Call ProcessBalanceSheet
-				if err := services.ProcessBalanceSheet(data, dbManager); err != nil {
-					logmanager.Errorf("Error processing balance sheet: %v", err)
-					return 1
-				}
-			case "CASH_FLOW":
-				// Call ProcessCashFlow
-				if err := services.ProcessCashFlow(data, dbManager); err != nil {
-					logmanager.Errorf("Error processing cash flow statement: %v", err)
-					return 1
-				}
-			}
-			
+		} else {
+			logmanager.Infof("No earning report today for %s", symbol)
 		}
 	}
 	

@@ -35,13 +35,15 @@ docker build -t finanical_homelab:latest .
 ## Option 1
 ### Run company_info_collector
 ```
-./bin/company_info_collector
+cd bin 
+./company_info_collector
 ```
 I run this service once a day. Recommand to setup a cronjob
 
 ### Run financial_statement_collector
 ```
-./bin/company_info_collector
+cd bin 
+./financial_statement_collector
 ```
 I run this service once a day
 

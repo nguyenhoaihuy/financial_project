@@ -25,7 +25,7 @@ func run() int {
 	}
 	defer dbManager.Close()
 	function := "EARNINGS_CALENDAR"
-	horizon := "2month"
+	horizon := "1month"
 	reader, cleanup, err := api.FetchCSVReader(function,horizon,cfg.APIKey)
 	if err != nil {
 		logmanager.Errorf("Error fetching CSV: %v\n", err)
