@@ -2,7 +2,8 @@
 This project collects financial data of public company
 
 # Prerequisite
-[Docker](https://docs.docker.com/engine/install/)
+1. [Docker](https://docs.docker.com/engine/install/)
+2. Data source [alphavantage.co](https://www.alphavantage.co/). Make sure you get an API key first. Note that free API key limits 25 calls per day
 
 # Components
 
@@ -31,13 +32,26 @@ docker build -t finanical_homelab:latest .
 ```
 
 # Run components
-### Run company_info_collector from docker image
+## Option 1
+### Run company_info_collector
 ```
 ./bin/company_info_collector
 ```
+I run this service once a day. Recommand to setup a cronjob
 
+### Run financial_statement_collector
+```
+./bin/company_info_collector
+```
+I run this service once a day
+
+## Option 2:
 ### Run company_info_collector from docker image
+```
+docker run --rm financial_homelab:latest ./company_info_collector
+```
 
+### Run financial_statement_collector from docker image
 ```
 docker run --rm financial_homelab:latest ./company_info_collector
 ```
