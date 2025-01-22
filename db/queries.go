@@ -287,7 +287,7 @@ func (m *DBManager) InsertCompany(report models.Company) error {
 }
 
 func (m *DBManager) DeleteCompany(symbol string) error {
-	query := "DELETE FROM company WHERE symbol = ?"
+	query := fmt.Sprintf(`DELETE FROM company WHERE symbol = ?`)
     result, err := m.DB.Exec(query, symbol)
     if err != nil {
         return fmt.Errorf("failed to delete record: %v", err)
@@ -299,6 +299,15 @@ func (m *DBManager) DeleteCompany(symbol string) error {
     }
 
     fmt.Printf("Deleted %d record(s)\n", rowsAffected)
+    return nil
+}
+
+func (m *DBManager) UpdateCompanyEarningDate(symbol string, earning_date string) error {
+	query := "UPDATE company SET next_earning_report = ? WHERE symbol = ?"
+    _, err := m.DB.Exec(query, earning_date,symbol)
+	if err != nil {
+		logmanager.Errorf("Failed to retrieve affected rows: %v", err)
+	}
     return nil
 }
 
