@@ -29,7 +29,6 @@ func run() int {
 	}
 	defer dbManager.Close()
 
-	// symbols := []string{"AAPL", "MSFT", "GOOGL", "META", "AMZN", "NFLX", "TSLA", "NVDA", "INTC", "AMD", "KO","PEP", "MCD", "SBUX", "NKE", "LULU", "GPS", "TGT", "WMT", "COST"}
 	symbols := cfg.SYMBOLS
 	logmanager.Infof("Processing company %s", symbols)
 	for _, symbol := range symbols {
@@ -52,6 +51,61 @@ func run() int {
 		if err := services.ProcessCompanyInfo(data, dbManager); err != nil {
 			logmanager.Errorf("Error processing company info: %v", err)
 			return 1
+		}
+	}
+
+	for _, symbol := range symbols {
+		functions := []string{"INCOME_STATEMENT", "BALANCE_SHEET", "CASH_FLOW"}
+		for _, function := range functions {
+			// add initial data to financial statement tables
+			switch function {
+			case "INCOME_STATEMENT":
+				// check if the data is missing
+				missingData, err := dbManager.IsMissingIncomeStatement(symbol)
+				if err != nil {
+					return 1
+				}
+				if missingData {
+					data, err := api.FetchAPIData(function, symbol, cfg.APIKey)
+					if err != nil {
+						return 1
+					}
+					if err := services.ProcessIncomeStatement(data, dbManager); err != nil {
+						return 1
+					}
+				}
+				
+			case "BALANCE_SHEET":
+				missingData, err := dbManager.IsMissingBalanceSheet(symbol)
+				if err != nil {
+					return 1
+				}
+				if missingData {
+					data, err := api.FetchAPIData(function, symbol, cfg.APIKey)
+					if err != nil {
+						return 1
+					}
+					// Call ProcessBalanceSheet
+					if err := services.ProcessBalanceSheet(data, dbManager); err != nil {
+						return 1
+					}
+				}
+			case "CASH_FLOW":
+				missingData, err := dbManager.IsMissingCashFlow(symbol)
+				if err != nil {
+					return 1
+				}
+				if missingData {
+					data, err := api.FetchAPIData(function, symbol, cfg.APIKey)
+					if err != nil {
+						return 1
+					}
+					// Call ProcessCashFlow
+					if err := services.ProcessCashFlow(data, dbManager); err != nil {
+						return 1
+					}
+				}
+			}
 		}
 	}
 	
