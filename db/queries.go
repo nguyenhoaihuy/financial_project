@@ -324,4 +324,152 @@ func (m *DBManager) UpdateCompanyEarningDate(symbol string, earning_date string)
 	}
     return nil
 }
+func (m *DBManager) GetMissingKPI(tableName string, kpiTableName string) ([]models.MissingKPIRecord, error) {
+	query := fmt.Sprintf(`
+		SELECT isa.symbol, isa.fiscal_date_ending 
+		FROM %s isa
+		LEFT JOIN %s kpi
+		ON isa.symbol = kpi.symbol AND isa.fiscal_date_ending = kpi.fiscal_date
+		WHERE kpi.symbol IS NULL
+	`,tableName, kpiTableName)
+	rows, err := m.DB.Query(query)
+	defer rows.Close()
+	if err != nil {
+		logmanager.Errorf("Error getting discrepancies : %v", err)
+		return nil, err
+	}
+	var missingRecords []models.MissingKPIRecord
+	for rows.Next() {
+		var record models.MissingKPIRecord
+		if err := rows.Scan(&record.Symbol, &record.FiscalDate); err != nil {
+			logmanager.Errorf("getting error while scan missing kpi rows %v",err)
+		}
+		missingRecords = append(missingRecords, record)
+	}
+	return missingRecords, nil
+}
+func (m *DBManager) GetIncomeStatement(tableName string, symbol string, FiscalDate string) (models.IncomeStatement, error) {
+	var income_statement models.IncomeStatement
+	query := fmt.Sprintf(`SELECT 
+		total_revenue,
+		net_income,
+		cost_of_goods_and_services_sold,
+		interest_expense,
+		gross_profit,
+		ebit,
+		ebitda
+	FROM %s WHERE symbol = ? AND fiscal_date_ending = ?`, tableName)
+	err := m.DB.QueryRow(query, symbol,FiscalDate).Scan(
+		&income_statement.TotalRevenue,
+		&income_statement.NetIncome,
+		&income_statement.CostOfGoodsAndServicesSold,
+		&income_statement.InterestExpense,
+		&income_statement.GrossProfit,
+		&income_statement.Ebit,
+		&income_statement.Ebitda)
+	if err != nil {
+		logmanager.Errorf("Failed to retrieve affected rows: %v", err)
+	}
+	return income_statement, nil
+}
 
+func (m *DBManager) GetBalanceSheet(tableName string, symbol string, FiscalDate string) (models.BalanceSheet, error) {
+	var balance_sheet models.BalanceSheet
+	query := fmt.Sprintf(`SELECT 
+		total_assets,
+		total_liabilities,
+		total_current_liabilities,
+		total_current_assets,
+		inventory,
+		current_accounts_payable,
+		current_debt,
+		current_net_receivables,
+		total_shareholder_equity,
+		cash_and_cash_equivalents,
+		common_stock_shares_outstanding
+	FROM %s WHERE symbol = ? AND fiscal_date_ending = ?`, tableName)
+	err := m.DB.QueryRow(query, symbol, FiscalDate).Scan(
+		&balance_sheet.TotalAssets,
+		&balance_sheet.TotalLiabilities,
+		&balance_sheet.TotalCurrentLiabilities,
+		&balance_sheet.TotalCurrentAssets,
+		&balance_sheet.Inventory,
+		&balance_sheet.CurrentAccountsPayable,
+		&balance_sheet.CurrentDebt,
+		&balance_sheet.CurrentNetReceivables,
+		&balance_sheet.TotalShareholderEquity,
+		&balance_sheet.CashAndCashEquivalentsAtCarryingValue,
+		&balance_sheet.CommonStockSharesOutstanding)
+	if err != nil {
+		logmanager.Errorf("Failed to retrieve affected rows: %v", err)
+	}
+	return balance_sheet, nil
+}
+
+// func (m *DBManager) GetCashFlow(tableName string, symbol string, FiscalDate string) (*models.CashFlow, error) {
+// 	var cash_flow models.CashFlow
+// 	query := fmt.Sprintf(`SELECT 
+// 		operating_cashflow,
+// 		investing_cashflow,
+// 		financing_cashflow,
+// 		effect_of_exchange_rate_on_cash_and_cash_equivalents,
+// 		net_change_in_cash_and_cash_equivalents
+// 	FROM %s WHERE symbol = ? AND fiscal_date_ending = ?`, tableName)
+// 	err := m.DB.QueryRow(query, symbol).Scan(
+// 		&cash_flow.OperatingCashflow,
+// 		&cash_flow.InvestingCashflow,
+// 		&cash_flow.FinancingCashflow,
+// 		&cash_flow.EffectOfExchangeRateOnCashAndCashEquivalents,
+// 		&cash_flow.NetChangeInCashAndCashEquivalents
+// 	)
+// 	if err != nil {
+// 		logmanager.Errorf("Failed to retrieve affected rows: %v", err)
+// 	}
+// 	return cash_flow, nil
+// }
+
+func (m *DBManager) InsertKPI(report models.KPI, tableName string, symbol string, fiscalDateEnding string) error {
+	query := fmt.Sprintf(`INSERT INTO %s (
+		symbol,
+		fiscal_date,
+		net_profit_margin,
+		roe,
+		eps,
+		roa,
+		gross_margin,
+		current_ratio,
+		quick_ratio,
+		cash_ratio,
+		debt_to_equity,
+		interest_coverage,
+		asset_turnover,
+		inventory_turnover,
+		receivables_turnover,
+		accounts_payable_turnover,
+		dso,
+		dio,
+		dpo
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, tableName)
+	_, err := m.DB.Exec(
+		query,
+		symbol,
+		fiscalDateEnding,
+		report.NetProfitMargin,
+		report.ROE,
+		report.EPS,
+		report.ROA,
+		report.GrossMargin,
+		report.CurrentRatio,
+		report.QuickRatio,
+		report.CashRatio,
+		report.DebtToEquity,
+		report.InterestCoverage,
+		report.AssetTurnover,
+		report.InventoryTurnover,
+		report.ReceivablesTurnover,
+		report.AccountsPayableTurnover,
+		report.DSO,
+		report.DIO,
+		report.DPO)
+	return err
+}
