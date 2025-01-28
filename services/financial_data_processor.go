@@ -27,6 +27,7 @@ func ProcessIncomeStatement(data []byte, dbManager *db.DBManager) error {
 			if err := dbManager.InsertIncomeStatement(report,"income_statement_annual",response.Symbol); err != nil {
 				return err
 			}
+			logmanager.Infof("Added (%s, %s) record into table %s", response.Symbol, report.FiscalDateEnding, "income_statement_annual")
 		} else {
 			logmanager.Infof("Record (%s, %s) exists in table %s", response.Symbol, report.FiscalDateEnding, "income_statement_annual")
 		}
@@ -42,6 +43,7 @@ func ProcessIncomeStatement(data []byte, dbManager *db.DBManager) error {
 			if err := dbManager.InsertIncomeStatement(report,"income_statement_quarter",response.Symbol); err != nil {
 				return err
 			}
+			logmanager.Infof("Added (%s, %s) record into table %s", response.Symbol, report.FiscalDateEnding, "income_statement_quarter")
 		} else {
 			logmanager.Infof("Record (%s, %s) exists in table %s", response.Symbol, report.FiscalDateEnding, "income_statement_quarter")
 		}
@@ -72,6 +74,7 @@ func ProcessBalanceSheet(data []byte, dbManager *db.DBManager) error {
 			if err := dbManager.InsertBalanceSheet(report,"balance_sheet_annual",response.Symbol); err != nil {
 				return err
 			}
+			logmanager.Infof("Added (%s, %s) record into table %s", response.Symbol, report.FiscalDateEnding, "balance_sheet_annual")
 		} else {
 			logmanager.Infof("Record (%s, %s) exists in table %s", response.Symbol, report.FiscalDateEnding, "balance_sheet_annual")
 		}
@@ -87,6 +90,7 @@ func ProcessBalanceSheet(data []byte, dbManager *db.DBManager) error {
 			if err := dbManager.InsertBalanceSheet(report,"balance_sheet_quarter",response.Symbol); err != nil {
 				return err
 			}
+			logmanager.Infof("Added (%s, %s) record into table %s", response.Symbol, report.FiscalDateEnding, "balance_sheet_quarter")
 		} else {
 			logmanager.Infof("Record (%s, %s) exists in table %s", response.Symbol, report.FiscalDateEnding, "balance_sheet_quarter")
 		}
@@ -117,6 +121,7 @@ func ProcessCashFlow(data []byte, dbManager *db.DBManager) error {
 			if err := dbManager.InsertCashFlow(report,"cash_flow_annual",response.Symbol); err != nil {
 				return err
 			}
+			logmanager.Infof("Added (%s, %s) record into table %s", response.Symbol, report.FiscalDateEnding, "cash_flow_annual")
 		} else {
 			logmanager.Infof("Record (%s, %s) exists in table %s", response.Symbol, report.FiscalDateEnding, "cash_flow_annual")
 		}
@@ -132,6 +137,7 @@ func ProcessCashFlow(data []byte, dbManager *db.DBManager) error {
 			if err := dbManager.InsertCashFlow(report,"cash_flow_quarter",response.Symbol); err != nil {
 				return err
 			}
+			logmanager.Infof("Added (%s, %s) record into table %s", response.Symbol, report.FiscalDateEnding, "cash_flow_quarter")
 		} else {
 			logmanager.Infof("Record (%s, %s) exists in table %s", response.Symbol, report.FiscalDateEnding, "cash_flow_quarter")
 		}

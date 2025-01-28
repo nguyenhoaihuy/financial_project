@@ -16,6 +16,36 @@ func convert(value string) int64 {
 	return v / 1000
 }
 
+func (m *DBManager) IsMissingIncomeStatement(symbol string) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM income_statement_annual WHERE symbol = ?)"
+	var exists bool
+	err := m.DB.QueryRow(query, symbol).Scan(&exists)
+	if err != nil {
+		logmanager.Errorf("Error checking record exists: %v", err)
+	}
+	return !exists, err
+}
+
+func (m *DBManager) IsMissingBalanceSheet(symbol string) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM balance_sheet_annual WHERE symbol = ?)"
+	var exists bool
+	err := m.DB.QueryRow(query, symbol).Scan(&exists)
+	if err != nil {
+		logmanager.Errorf("Error checking record exists: %v", err)
+	}
+	return !exists, err
+}
+
+func (m *DBManager) IsMissingCashFlow(symbol string) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM cash_flow_annual WHERE symbol = ?)"
+	var exists bool
+	err := m.DB.QueryRow(query, symbol).Scan(&exists)
+	if err != nil {
+		logmanager.Errorf("Error checking record exists: %v", err)
+	}
+	return !exists, err
+}
+
 func (m *DBManager) RecordExists(table, symbol, fiscalDateEnding string) (bool, error) {
 	query := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE symbol = ? AND fiscal_date_ending = ?)", table)
 	var exists bool
